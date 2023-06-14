@@ -1,88 +1,83 @@
-//
-//  ContentView.swift
-//  project_dream
-//
-//  Created by mac on 14.06.23.
-//
+import UIKit
 
-import SwiftUI
-import CoreData
-
-struct ContentView: View {
-    @Environment(\.managedObjectContext) private var viewContext
-
-    @FetchRequest(
-        sortDescriptors: [NSSortDescriptor(keyPath: \Item.timestamp, ascending: true)],
-        animation: .default)
-    private var items: FetchedResults<Item>
-
-    var body: some View {
-        NavigationView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp!, formatter: itemFormatter)")
-                    } label: {
-                        Text(item.timestamp!, formatter: itemFormatter)
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
-            Text("Select an item")
-        }
+class SleepTrackerViewController: UIViewController {
+    let sleepStatusLabel = UILabel()
+    let sleepButton = UIButton()
+    let setReminderButton = UIButton()
+    
+    var isSleeping = false
+    var sleepStartTime: Date?
+    var sleepDuration: TimeInterval = 0.0
+    
+    // Dodane elementy interfejsu użytkownika
+    let usernameTextField = UITextField()
+    let passwordTextField = UITextField()
+    let loginButton = UIButton()
+    
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        
+        configureUI()
+    }
+    
+    func configureUI() {
+        sleepStatusLabel.frame = CGRect(x: 0, y: 0, width: view.bounds.width, height: 100)
+        sleepStatusLabel.textAlignment = .center
+        sleepStatusLabel.font = UIFont.systemFont(ofSize: 24)
+        updateSleepStatusLabel()
+        view.addSubview(sleepStatusLabel)
+        
+        sleepButton.frame = CGRect(x: 50, y: 150, width: view.bounds.width - 100, height: 50)
+        sleepButton.setTitle("Rozpocznij sen", for: .normal)
+        sleepButton.addTarget(self, action: #selector(sleepButtonTapped), for: .touchUpInside)
+        sleepButton.backgroundColor = UIColor.blue
+        view.addSubview(sleepButton)
+        
+        
+        // Konfiguracja elementów logowania
+        usernameTextField.frame = CGRect(x: 50, y: 350, width: view.bounds.width - 100, height: 40)
+        usernameTextField.placeholder = "Nazwa użytkownika"
+        usernameTextField.borderStyle = .roundedRect
+        view.addSubview(usernameTextField)
+        
+        passwordTextField.frame = CGRect(x: 50, y: 400, width: view.bounds.width - 100, height: 40)
+        passwordTextField.placeholder = "Hasło"
+        passwordTextField.isSecureTextEntry = true
+        passwordTextField.borderStyle = .roundedRect
+        view.addSubview(passwordTextField)
+        
+        loginButton.frame = CGRect(x: 50, y: 450, width: view.bounds.width - 100, height: 40)
+        loginButton.setTitle("Zaloguj", for: .normal)
+        loginButton.addTarget(self, action: #selector(loginButtonTapped), for: .touchUpInside)
+        loginButton.backgroundColor = UIColor.green
+        view.addSubview(loginButton)
+    }
+    
+    @objc func sleepButtonTapped() {
+        // ...
     }
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(context: viewContext)
-            newItem.timestamp = Date()
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
+    
+    @objc func loginButtonTapped() {
+        // Sprawdzanie poprawności danych logowania
+        let validUsername = "user"
+        let validPassword = "password"
+        
+        if usernameTextField.text == validUsername && passwordTextField.text == validPassword {
+            // Logowanie udane
+            // Możesz dodać logikę przejścia do innej części aplikacji po zalogowaniu
+            print("Logowanie udane!")
+        } else {
+            // Logowanie nieudane
+            print("Nieprawidłowa nazwa użytkownika lub hasło.")
         }
+        
+        // Wyczyść pola tekstowe po próbie logowania
+        usernameTextField.text = ""
+        passwordTextField.text = ""
     }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            offsets.map { items[$0] }.forEach(viewContext.delete)
-
-            do {
-                try viewContext.save()
-            } catch {
-                // Replace this implementation with code to handle the error appropriately.
-                // fatalError() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
-                let nsError = error as NSError
-                fatalError("Unresolved error \(nsError), \(nsError.userInfo)")
-            }
-        }
-    }
-}
-
-private let itemFormatter: DateFormatter = {
-    let formatter = DateFormatter()
-    formatter.dateStyle = .short
-    formatter.timeStyle = .medium
-    return formatter
-}()
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView().environment(\.managedObjectContext, PersistenceController.preview.container.viewContext)
+    
+    func updateSleepStatusLabel() {
+        // ...
     }
 }
