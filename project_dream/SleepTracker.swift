@@ -1,7 +1,6 @@
 import UIKit
 
 class SleepTrackerViewScreen: UIView {
-    // Elementy interfejsu użytkownika
     let sleepStatusLabel = UILabel()
     let sleepButton = UIButton()
     let setReminderButton = UIButton()
@@ -9,7 +8,6 @@ class SleepTrackerViewScreen: UIView {
     let passwordTextField = UITextField()
     let loginButton = UIButton()
     
-    // Logika snu i przypomnień
     var isSleeping = false
     var sleepStartTime: Date?
     var sleepDuration: TimeInterval = 0.0
