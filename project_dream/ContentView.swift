@@ -9,7 +9,6 @@ class SleepTrackerViewController: UIViewController {
     var sleepStartTime: Date?
     var sleepDuration: TimeInterval = 0.0
     
-    // Dodane elementy interfejsu użytkownika
     let usernameTextField = UITextField()
     let passwordTextField = UITextField()
     let loginButton = UIButton()
@@ -34,7 +33,6 @@ class SleepTrackerViewController: UIViewController {
         view.addSubview(sleepButton)
         
         
-        // Konfiguracja elementów logowania
         usernameTextField.frame = CGRect(x: 50, y: 350, width: view.bounds.width - 100, height: 40)
         usernameTextField.placeholder = "Nazwa użytkownika"
         usernameTextField.borderStyle = .roundedRect
