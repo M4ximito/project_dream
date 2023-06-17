@@ -47,3 +47,17 @@ struct PersistenceController {
         container.viewContext.automaticallyMergesChangesFromParent = true
     }
 }
+
+//struct PersistenceController {
+//    static let shared = PersistenceController()
+//
+//    let container: NSPersistentContainer
+//
+//    init() {
+//        container = NSPersistentContainer(name: "SleepTracker")
+//        container.loadPersistentStores { (storeDescription, error) in
+//            if let error = error as NSError? {                fatalError("Error: \(error.localizedDescription)")
+//            }
+//        }
+//    }
+//}

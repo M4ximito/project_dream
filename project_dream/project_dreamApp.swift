@@ -1,4 +1,10 @@
 import SwiftUI
+import CoreData
+
+class SleepTime: NSManagedObject {
+    @NSManaged var startTime: Date
+    @NSManaged var endTime: Date
+}
 
 struct SleepTrackerView: View {
     @State private var isSleeping = false
@@ -11,54 +17,60 @@ struct SleepTrackerView: View {
     @State private var isLoggedIn = false
     @State private var isAccountViewPresented = false
     @State private var isSettingsViewPresented = false
-    @State private var startSleepCount = 0 // Liczba kliknięć na przycisk "Rozpocznij sen"
-
+    @State private var startSleepCount = 0
+    
     var body: some View {
-        Group {
-            if !isLoggedIn {
-                Button(action: {
-                    isLoginPresented = true
-                }) {
-                    Text("Zaloguj")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.blue)
-                        .cornerRadius(10)
-                        .padding()
+        NavigationView {
+            Group {
+                if !isLoggedIn {
+                    Button(action: {
+                        isLoginPresented = true
+                    }) {
+                        Text("Zaloguj")
+                            .font(.headline)
+                            .foregroundColor(.white)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .cornerRadius(10)
+                            .padding()
+                    }
+                    .sheet(isPresented: $isLoginPresented) {
+                        LoginView(email: $email, password: $password, isLoggedIn: $isLoggedIn)
+                    }
+                } else {
+                    SleepView(isSleeping: $isSleeping, sleepStartTime: $sleepStartTime, sleepEndTime: $sleepEndTime, sleepDuration: $sleepDuration, startSleepCount: $startSleepCount)
                 }
-                .sheet(isPresented: $isLoginPresented) {
-                    LoginView(email: $email, password: $password, isLoggedIn: $isLoggedIn)
-                }
-            } else {
-                SleepView(isSleeping: $isSleeping, sleepStartTime: $sleepStartTime, sleepEndTime: $sleepEndTime, sleepDuration: $sleepDuration, startSleepCount: $startSleepCount)
             }
+            .navigationBarTitle("Sleep Tracker", displayMode: .inline)
+            .navigationBarItems(
+                leading: HStack {
+                    Button(action: {
+                        isAccountViewPresented = true
+                    }) {
+                        Text("Account")
+                    }
+                    .sheet(isPresented: $isAccountViewPresented) {
+                        AccountView(startSleepCount: startSleepCount, sleepStartTime: sleepStartTime, sleepEndTime: sleepEndTime)
+                    }
+                },
+                trailing: HStack {
+                    Button(action: {
+                        isSettingsViewPresented = true
+                    }) {
+                        Text("Settings")
+                    }
+                    .sheet(isPresented: $isSettingsViewPresented) {
+                        SettingsView()
+                    }
+                }
+            )
         }
-        .navigationBarItems(
-            trailing: HStack {
-                Button(action: {
-                    isAccountViewPresented = true
-                }) {
-                    Text("Account")
-                }
-                .sheet(isPresented: $isAccountViewPresented) {
-                    AccountView(startSleepCount: startSleepCount, sleepStartTime: sleepStartTime, sleepEndTime: sleepEndTime)
-                }
-
-                
-                Button(action: {
-                    isSettingsViewPresented = true
-                }) {
-                    Text("Settings")
-                }
-                .sheet(isPresented: $isSettingsViewPresented) {
-                    SettingsView()
-                }
-            }
-        )
+        .navigationViewStyle(StackNavigationViewStyle())
+        
     }
 }
+
 
 struct SleepView: View {
     @Binding var isSleeping: Bool
@@ -90,6 +102,7 @@ struct SleepView: View {
                     .font(.headline)
                     .padding()
             }
+
         }
     }
 
@@ -119,11 +132,12 @@ struct SleepView: View {
             sleepEndTime = nil
         }
     }
+    
     private func incrementStartSleepCount() {
         startSleepCount += 1
     }
-}
-private func calculateDuration(startTime: Date, endTime: Date) -> String {
+    
+    private func calculateDuration(startTime: Date, endTime: Date) -> String {
         let formatter = DateComponentsFormatter()
         formatter.allowedUnits = [.hour, .minute, .second]
         formatter.unitsStyle = .abbreviated
@@ -131,6 +145,7 @@ private func calculateDuration(startTime: Date, endTime: Date) -> String {
         let duration = endTime.timeIntervalSince(startTime)
         return formatter.string(from: duration) ?? ""
     }
+}
 
 struct SleepTrackerView_Previews: PreviewProvider {
     static var previews: some View {
@@ -186,19 +201,18 @@ struct AccountView: View {
     var body: some View {
         VStack {
             if let startTime = sleepStartTime, let endTime = sleepEndTime {
-                            Text("Data rozpoczęcia snu: \(formattedDate(startTime))")
-                                .font(.headline)
-                                .padding()
+                Text("Data rozpoczęcia snu: \(formattedDate(startTime))")
+                    .font(.headline)
+                    .padding()
 
-                            Text("Czas trwania snu: \(calculateDuration(startTime: startTime, endTime: endTime))")
-                                .font(.headline)
-                                .padding()
-                        } else {
-                            Text("Brak danych o śnie")
-                                .font(.headline)
-                                .padding()
-                        }
-            
+                Text("Czas trwania snu: \(calculateDuration(startTime: startTime, endTime: endTime))")
+                    .font(.headline)
+                    .padding()
+            } else {
+                Text("Brak danych o śnie")
+                    .font(.headline)
+                    .padding()
+            }
         }
     }
     
@@ -208,72 +222,78 @@ struct AccountView: View {
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }
+    
+    private func calculateDuration(startTime: Date, endTime: Date) -> String {
+        let formatter = DateComponentsFormatter()
+        formatter.allowedUnits = [.hour, .minute, .second]
+        formatter.unitsStyle = .abbreviated
+
+        let duration = endTime.timeIntervalSince(startTime)
+        return formatter.string(from: duration) ?? ""
+    }
 }
-    struct SettingsView: View {
-        @State private var isDarkModeEnabled = false
-        
-        var body: some View {
-            Form {
-                Section(header: Text("Wygląd")) {
-                    Toggle(isOn: $isDarkModeEnabled) {
-                        Text("Tryb nocny")
-                    }
+
+struct SettingsView: View {
+    @State private var isDarkModeEnabled = false
+    
+    var body: some View {
+        Form {
+            Section(header: Text("Wygląd")) {
+                Toggle(isOn: $isDarkModeEnabled) {
+                    Text("Tryb nocny")
                 }
             }
-            .onAppear {
-                loadSettings()
-            }
-            .onChange(of: isDarkModeEnabled) { _ in
-                saveSettings()
-                applyAppearance()
-            }
         }
-        
-        private func loadSettings() {
-            if let isDarkModeEnabled = UserDefaults.standard.value(forKey: "isDarkModeEnabled") as? Bool {
-                self.isDarkModeEnabled = isDarkModeEnabled
-            }
+        .onAppear {
+            loadSettings()
         }
-        
-        private func saveSettings() {
-            UserDefaults.standard.setValue(isDarkModeEnabled, forKey: "isDarkModeEnabled")
+        .onChange(of: isDarkModeEnabled) { _ in
+            saveSettings()
+            applyAppearance()
         }
-        
-        private func applyAppearance() {
-            if #available(iOS 15.0, *) {
-                UIApplication.shared.connectedScenes
-                    .compactMap { $0 as? UIWindowScene }
-                    .flatMap { $0.windows }
-                    .forEach { window in
-                        if isDarkModeEnabled {
-                            window.overrideUserInterfaceStyle = .dark
-                        } else {
-                            window.overrideUserInterfaceStyle = .light
-                        }
-                    }
-            } else {
-                UIApplication.shared.windows.forEach { window in
+    }
+    
+    private func loadSettings() {
+        if let isDarkModeEnabled = UserDefaults.standard.value(forKey: "isDarkModeEnabled") as? Bool {
+            self.isDarkModeEnabled = isDarkModeEnabled
+        }
+    }
+    
+    private func saveSettings() {
+        UserDefaults.standard.setValue(isDarkModeEnabled, forKey: "isDarkModeEnabled")
+    }
+    
+    private func applyAppearance() {
+        if #available(iOS 15.0, *) {
+            UIApplication.shared.connectedScenes
+                .compactMap { $0 as? UIWindowScene }
+                .flatMap { $0.windows }
+                .forEach { window in
                     if isDarkModeEnabled {
                         window.overrideUserInterfaceStyle = .dark
                     } else {
                         window.overrideUserInterfaceStyle = .light
                     }
                 }
-            }
-        }
-        
-    }
-    
-    
-    
-    
-    @main
-    struct SleepTrackerApp: App {
-        var body: some Scene {
-            WindowGroup {
-                NavigationView {
-                    SleepTrackerView()
+        } else {
+            UIApplication.shared.windows.forEach { window in
+                if isDarkModeEnabled {
+                    window.overrideUserInterfaceStyle = .dark
+                } else {
+                    window.overrideUserInterfaceStyle = .light
                 }
             }
         }
     }
+}
+
+@main
+struct SleepTrackerApp: App {
+    var body: some Scene {
+        WindowGroup {
+            NavigationView {
+                SleepTrackerView()
+            }
+        }
+    }
+}
