@@ -100,7 +100,6 @@ struct SleepView: View {
                     .font(.headline)
                     .padding()
             }
-
         }
     }
 
@@ -144,6 +143,7 @@ struct SleepView: View {
         return formatter.string(from: duration) ?? ""
     }
 }
+
 
 struct LoginView: View {
     @Binding var email: String
