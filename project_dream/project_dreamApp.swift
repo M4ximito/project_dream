@@ -1,11 +1,6 @@
 import SwiftUI
 import CoreData
 
-class SleepTime: NSManagedObject {
-    @NSManaged var startTime: Date
-    @NSManaged var endTime: Date
-}
-
 struct SleepTrackerView: View {
     @State private var isSleeping = false
     @State private var sleepStartTime: Date?
@@ -15,8 +10,8 @@ struct SleepTrackerView: View {
     @State private var email = ""
     @State private var password = ""
     @State private var isLoggedIn = false
-    @State private var isAccountViewPresented = false
     @State private var isSettingsViewPresented = false
+    @State private var isAccountViewPresented = false
     @State private var startSleepCount = 0
     
     var body: some View {
@@ -37,40 +32,43 @@ struct SleepTrackerView: View {
                     }
                     .sheet(isPresented: $isLoginPresented) {
                         LoginView(email: $email, password: $password, isLoggedIn: $isLoggedIn)
+                            .onChange(of: isLoggedIn) { _ in
+                                isLoginPresented = false
+                            }
                     }
-                } else {
-                    SleepView(isSleeping: $isSleeping, sleepStartTime: $sleepStartTime, sleepEndTime: $sleepEndTime, sleepDuration: $sleepDuration, startSleepCount: $startSleepCount)
                 }
             }
             .navigationBarTitle("Sleep Tracker", displayMode: .inline)
             .navigationBarItems(
-                leading: HStack {
-                    Button(action: {
-                        isAccountViewPresented = true
-                    }) {
-                        Text("Account")
-                    }
-                    .sheet(isPresented: $isAccountViewPresented) {
-                        AccountView(startSleepCount: startSleepCount, sleepStartTime: sleepStartTime, sleepEndTime: sleepEndTime)
-                    }
-                },
                 trailing: HStack {
-                    Button(action: {
-                        isSettingsViewPresented = true
-                    }) {
-                        Text("Settings")
+                    if isLoggedIn {
+                        Button(action: {
+                            isAccountViewPresented = true
+                        }) {
+                            Text("Account")
+                        }
+                        .sheet(isPresented: $isAccountViewPresented) {
+                            AccountView(startSleepCount: startSleepCount, sleepStartTime: sleepStartTime, sleepEndTime: sleepEndTime)
+                        }
                     }
-                    .sheet(isPresented: $isSettingsViewPresented) {
-                        SettingsView()
+                    if isLoggedIn{
+                        Button(action: {
+                            isSettingsViewPresented = true
+                        }) {
+                            Image(systemName: "gearshape")
+                                .font(.title)
+                        }
+                        .sheet(isPresented: $isSettingsViewPresented) {
+                            SettingsView()
+                        }
                     }
                 }
             )
         }
         .navigationViewStyle(StackNavigationViewStyle())
-        
+
     }
 }
-
 
 struct SleepView: View {
     @Binding var isSleeping: Bool
@@ -147,12 +145,6 @@ struct SleepView: View {
     }
 }
 
-struct SleepTrackerView_Previews: PreviewProvider {
-    static var previews: some View {
-        SleepTrackerView()
-    }
-}
-
 struct LoginView: View {
     @Binding var email: String
     @Binding var password: String
@@ -194,6 +186,7 @@ struct LoginView: View {
 }
 
 struct AccountView: View {
+    @State private var isShowingSettings = false
     var startSleepCount: Int // Liczba kliknięć na przycisk "Rozpocznij sen"
     var sleepStartTime: Date?
     var sleepEndTime: Date?
@@ -213,7 +206,26 @@ struct AccountView: View {
                     .font(.headline)
                     .padding()
             }
+            
+            // Данные пользователя
+            Text("Imię: John Doe")
+            Text("Wiek: 30")
+            
+            // Изображение из интернета
+            URLImage(url: URL(string: "https://cdn.icon-icons.com/icons2/1154/PNG/512/1486564400-account_81513.png"))
+                .frame(width: 100, height: 100)
+                .cornerRadius(50)
         }
+        .navigationBarItems(trailing:
+            Button(action: {
+                isShowingSettings = true
+            }) {
+                Image(systemName: "gear")
+            }
+            .sheet(isPresented: $isShowingSettings) {
+                SettingsView()
+            }
+        )
     }
     
     private func formattedDate(_ date: Date) -> String {
@@ -230,6 +242,24 @@ struct AccountView: View {
 
         let duration = endTime.timeIntervalSince(startTime)
         return formatter.string(from: duration) ?? ""
+    }
+}
+
+
+// Пример реализации URLImage для загрузки изображения из интернета
+struct URLImage: View {
+    let url: URL?
+    
+    var body: some View {
+        if let url = url, let data = try? Data(contentsOf: url), let image = UIImage(data: data) {
+            Image(uiImage: image)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+        } else {
+            Image(systemName: "photo")
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+        }
     }
 }
 
